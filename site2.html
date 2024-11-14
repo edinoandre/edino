@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcrição de Áudio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #transcricao {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            width: 100%;
+            height: 200px;
+            overflow-y: scroll;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Transcrição de Áudio em Tempo Real</h1>
+    <button onclick="iniciarTranscricao()">Iniciar Transcrição</button>
+    <div id="transcricao"></div>
+
+    <script>
+        const transcricaoDiv = document.getElementById('transcricao');
+        const botao = document.querySelector('button');
+        const historicoTranscricao = [];  // Lista para armazenar transcrições finais únicas
+
+        // Verifique se o navegador suporta a API de reconhecimento de fala (SpeechRecognition)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            alert("Seu navegador não suporta a API de reconhecimento de fala.");
+        }
+
+        // Criação de um novo objeto de reconhecimento de fala
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'pt-BR';  // Define o idioma como português brasileiro
+        recognition.continuous = true;  // Faz a transcrição contínua
+        recognition.interimResults = true;  // Permite ver os resultados em tempo real
+        
+        recognition.onstart = function() {
+            botao.innerHTML = 'Transcrição em andamento...';
+        };
+        
+        recognition.onend = function() {
+            botao.innerHTML = 'Iniciar Transcrição';
+        };
+
+        recognition.onresult = function(event) {
+            let transcricaoTexto = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const resultado = event.results[i];
+                if (resultado.isFinal) {  // Somente adiciona o texto finalizado
+                    const novaTranscricao = resultado[0].transcript.trim();
+                    if (!historicoTranscricao.includes(novaTranscricao)) {  // Adiciona se não estiver no histórico
+                        historicoTranscricao.push(novaTranscricao);
+                        transcricaoTexto += novaTranscricao + ' ';
+                    }
+                }
+            }
+            if (transcricaoTexto) {
+                transcricaoDiv.innerText += transcricaoTexto;  // Adiciona ao texto existente
+                transcricaoDiv.scrollTop = transcricaoDiv.scrollHeight;  // Rolagem automática para o final
+            }
+        };
+
+        function iniciarTranscricao() {
+            recognition.start();  // Inicia o reconhecimento de fala
+        }
+    </script>
+</body>
+</html>
